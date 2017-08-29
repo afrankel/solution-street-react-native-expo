@@ -1,8 +1,20 @@
 import React from 'react';
-import { Alert, StyleSheet, Text, View, Button, TouchableHighlight } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, View, Button, TouchableHighlight } from 'react-native';
 import { DocumentPicker } from 'expo';
 import t from 'tcomb-form-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import * as firebase from 'firebase';
+import { masterFirebaseConfig } from '../firebase';
+
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: masterFirebaseConfig.apiKey,
+  authDomain: masterFirebaseConfig.authDomain,
+  databaseURL: masterFirebaseConfig.databaseURL,
+  storageBucket: masterFirebaseConfig.storageBucket
+};
+
+firebase.initializeApp(firebaseConfig);
 
 const Form = t.form.Form;
 
@@ -49,12 +61,24 @@ export default class ApplyScreen extends React.Component {
            'Please select your resume'
         );
       } else {
-        console.log(value); // value here is an instance of Person
-        console.log(this.state.resumeUri);
-        Alert.alert(
-           'Your resume has been submitted. We thank you!'
-        );
-        this.clearForm();
+        firebase.database().ref('applicants').push(value).
+          then((data) => {
+            //dispatch({type:"FULFILLED"})
+            //success
+            console.log(value); // value here is an instance of Person
+            console.log(this.state.resumeUri);
+            Alert.alert(
+               'Your resume has been submitted. We thank you!'
+            );
+            this.clearForm();
+          }).
+          catch((err) => {
+            //dispatch({type:"REJECTED"})
+            //error
+            Alert.alert(
+               'Error occurred. Please try again or submit on our website: solutionstreet.com'
+            );
+          });
       }
     }
   };
